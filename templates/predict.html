@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Predict</h1>
+<form method="POST">
+    <label>Sepal length: <input type="text" name="sepal_length" required></label><br>
+    <label>Sepal width: <input type="text" name="sepal_width" required></label><br>
+    <label>Petal length: <input type="text" name="petal_length" required></label><br>
+    <label>Petal width: <input type="text" name="petal_width" required></label><br>
+    <button type="submit">Predict</button>
+</form>
+{% endblock %}
