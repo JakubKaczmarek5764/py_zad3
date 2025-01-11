@@ -5,7 +5,6 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from sklearn.datasets import load_iris
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
-
 from models import db, Iris
 
 
