@@ -1,19 +1,20 @@
 import os
 
 import numpy as np
-from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from sklearn.datasets import load_iris
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
 from models import db, Iris
-from sklearn.datasets import load_iris
+
 
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    if not os.path.exists('instance/data.db'): # Initialize database with Iris dataset
+    if not os.path.exists('instance/data.db'):  # Initialize database with Iris dataset
         load_iris_data()
 
     db.init_app(app)
@@ -35,16 +36,16 @@ def load_iris_data():
                 sepal_width=feature_values[1],
                 petal_length=feature_values[2],
                 petal_width=feature_values[3],
-                category=int(target) # otherwise it will be saved as hex
+                category=int(target)  # otherwise it will be saved as hex
             )
             db.session.add(iris)
         db.session.commit()
 
 
-
 app = create_app()
 classifier = None
 scaler = None
+classifier_needs_update = False
 
 def create_iris_classifier_and_scaler():
     classifier = KNeighborsClassifier(n_neighbors=3)
@@ -57,18 +58,21 @@ def create_iris_classifier_and_scaler():
     return classifier, scaler
 
 
-
 def predict_iris(sepal_length, sepal_width, petal_length, petal_width):
-    global classifier, scaler
-    if not classifier:
+    global classifier, scaler, classifier_needs_update
+    if not classifier or classifier_needs_update:
         classifier, scaler = create_iris_classifier_and_scaler()
+        classifier_needs_update = False
     scaled_data = scaler.transform([[sepal_length, sepal_width, petal_length, petal_width]])
     prediction = classifier.predict(scaled_data)
     return prediction[0]
+
+
 @app.route('/')
 def home():
     irises = Iris.query.all()
     return render_template('index.html', irises=irises)
+
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_iris():
@@ -79,18 +83,20 @@ def add_iris():
             petal_length = float(request.form.get('petal_length'))
             petal_width = float(request.form.get('petal_width'))
             category = int(request.form.get('category'))
-            new_iris = Iris(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length, petal_width=petal_width, category=category)
+            new_iris = Iris(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length,
+                            petal_width=petal_width, category=category)
             db.session.add(new_iris)
             db.session.commit()
+            global classifier_needs_update
+            classifier_needs_update = True
             return redirect(url_for('home'))
         except ValueError:
             return render_template('error.html', message="Invalid input data"), 400
     return render_template('add.html')
 
+
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
-    # TODO: Tu chyba je, ze kdyz uzivatel nezadá žádné hodnoty, tak se vykreslí chyba xd (alespoň tak, jak to funguje) ale mi ziutek podpowiada, že se to děje všude
-    # TODO: Walidacja jescze chyba jakas
     if request.method == 'POST':
         try:
             sepal_length = float(request.form.get('sepal_length'))
@@ -102,6 +108,7 @@ def predict():
         except ValueError:
             return render_template('error.html', message="Invalid input data"), 400
     return render_template('predict.html')
+
 
 @app.route('/delete/<int:record_id>', methods=['POST'])
 def delete_iris(record_id):
@@ -117,8 +124,8 @@ def delete_iris(record_id):
 @app.route('/api/data', methods=['GET'])
 def get_all_irises():
     irises = Iris.query.all()
-    print(irises)
     return jsonify([iris.to_dict() for iris in irises])
+
 
 @app.route('/api/data', methods=['POST'])
 def add_data_point_api():
@@ -129,12 +136,14 @@ def add_data_point_api():
         petal_length = float(data['petal_length'])
         petal_width = float(data['petal_width'])
         category = int(data['category'])
-        new_iris = Iris(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length, petal_width=petal_width, category=category)
+        new_iris = Iris(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length,
+                        petal_width=petal_width, category=category)
         db.session.add(new_iris)
         db.session.commit()
         return jsonify({"id": new_iris.id}), 201
     except KeyError:
         return jsonify({"error": "Invalid data"}), 400
+
 
 @app.route('/api/data/<int:record_id>', methods=['DELETE'])
 def delete_iris_api(record_id):
@@ -144,20 +153,21 @@ def delete_iris_api(record_id):
     db.session.delete(iris)
     db.session.commit()
     return jsonify({"id": record_id}), 200
+
+
 @app.route('/api/predictions', methods=['GET'])
 def predict_api():
-    print("W metodzie predict api")
-    # TODO: Walidacja jescze chyba jakas
     try:
-        sepal_length = float(request.args.get('sepal_length'))
-        sepal_width = float(request.args.get('sepal_width'))
-        petal_length = float(request.args.get('petal_length'))
-        petal_width = float(request.args.get('petal_width'))
-        print("Dane wczytane")
+        data = request.get_json()
+        sepal_length = float(data['sepal_length'])
+        sepal_width = float(data['sepal_width'])
+        petal_length = float(data['petal_length'])
+        petal_width = float(data['petal_width'])
         prediction = predict_iris(sepal_length, sepal_width, petal_length, petal_width)
         return jsonify({"prediction": int(prediction)}), 200
     except KeyError:
         return jsonify({"error": "Invalid data"}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)

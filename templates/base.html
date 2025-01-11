@@ -7,12 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <nav>
-        <a href="{{ url_for('home') }}">Home</a> |
-        <a href="{{ url_for('add_iris') }}">Add Iris</a> |
-        <a href="{{ url_for('predict') }}">Predict</a>
-    </nav>
-    <hr>
-    {% block content %}{% endblock %}
+<nav>
+    <a href="{{ url_for('home') }}">Home</a> |
+    <a href="{{ url_for('add_iris') }}">Add Iris</a> |
+    <a href="{{ url_for('predict') }}">Predict</a>
+</nav>
+<hr>
+{% block content %}{% endblock %}
 </body>
 </html>

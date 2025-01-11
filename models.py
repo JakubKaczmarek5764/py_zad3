@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Iris(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sepal_length = db.Column(db.Float, nullable=False)

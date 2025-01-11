@@ -1,9 +1,8 @@
-
 {% extends 'base.html' %}
 {% block content %}
-<h1>Irises</h1>
-<table>
-    <thead>
+    <h1>Irises</h1>
+    <table>
+        <thead>
         <tr>
             <th>Number</th>
             <th>Sepal length</th>
@@ -14,23 +13,23 @@
             <th>Actions</th>
 
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         {% for iris in irises %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ iris.sepal_length }}</td>
-            <td>{{ iris.sepal_width }}</td>
-            <td>{{ iris.petal_length }}</td>
-            <td>{{ iris.petal_width }}</td>
-            <td>{{ iris.category }}</td>
-            <td>
-                <form action="{{ url_for('delete_iris', record_id=iris.id) }}" method="POST">
-                    <button type="submit">Delete</button>
-                </form>
-            </td>
-        </tr>
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ iris.sepal_length }}</td>
+                <td>{{ iris.sepal_width }}</td>
+                <td>{{ iris.petal_length }}</td>
+                <td>{{ iris.petal_width }}</td>
+                <td>{{ iris.category }}</td>
+                <td>
+                    <form action="{{ url_for('delete_iris', record_id=iris.id) }}" method="POST">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 {% endblock %}
