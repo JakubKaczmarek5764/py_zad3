@@ -12,33 +12,25 @@ def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
 
     if not os.path.exists('instance/data.db'):  # Initialize database with Iris dataset
-        load_iris_data()
-
-    db.init_app(app)
+        with app.app_context():
+            db.create_all()
+            iris_dataset = load_iris()
+            for feature_values, target in zip(iris_dataset['data'], iris_dataset['target']):
+                iris = Iris(
+                    sepal_length=feature_values[0],
+                    sepal_width=feature_values[1],
+                    petal_length=feature_values[2],
+                    petal_width=feature_values[3],
+                    category=int(target)  # otherwise it will be saved as hex
+                )
+                db.session.add(iris)
+            db.session.commit()
     return app
 
 
-def load_iris_data():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-
-    with app.app_context():
-        db.create_all()
-        iris_dataset = load_iris()
-        for feature_values, target in zip(iris_dataset['data'], iris_dataset['target']):
-            iris = Iris(
-                sepal_length=feature_values[0],
-                sepal_width=feature_values[1],
-                petal_length=feature_values[2],
-                petal_width=feature_values[3],
-                category=int(target)  # otherwise it will be saved as hex
-            )
-            db.session.add(iris)
-        db.session.commit()
 
 
 app = create_app()
