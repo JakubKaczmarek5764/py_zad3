@@ -108,6 +108,8 @@ def delete_iris(record_id):
         return render_template('error.html', message="Record not found"), 404
     db.session.delete(data_point)
     db.session.commit()
+    global classifier_needs_update
+    classifier_needs_update = True
     return redirect(url_for('home'))
 
 
@@ -115,7 +117,7 @@ def delete_iris(record_id):
 @app.route('/api/data', methods=['GET'])
 def get_all_irises():
     irises = Iris.query.all()
-    return jsonify([iris.to_dict() for iris in irises])
+    return jsonify([iris.to_dict() for iris in irises]), 200
 
 
 @app.route('/api/data', methods=['POST'])
@@ -143,6 +145,8 @@ def delete_iris_api(record_id):
         return jsonify({"error": "Record not found"}), 404
     db.session.delete(iris)
     db.session.commit()
+    global classifier_needs_update
+    classifier_needs_update = True
     return jsonify({"id": record_id}), 200
 
 
@@ -161,4 +165,4 @@ def predict_api():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
